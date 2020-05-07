@@ -35,9 +35,6 @@ ggplot(cmi_sub, aes(x = Date, y = CMI, colour = City))+
        caption = 'Source: Citymapper.com/CMI')
 
 # Google Mobility Index
-google_uk <- google_sub %>%
-  dplyr::filter(country_region == 'United Kingdom') 
-
 dplyr::filter(google_sub, is.na(sub_region_1)) %>%
   ggplot()+
   geom_ribbon(aes(x = date, ymin = value, ymax = value_roll, fill = entity), alpha = 0.2)+
