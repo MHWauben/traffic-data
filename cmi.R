@@ -1,19 +1,5 @@
 # CITYMAPPER MOBILITY DATA
 # A few cities only, but good detail
-library(readr)
-library(magrittr)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-countries <- c('United Kingdom', 'United States of America', 'France', 'Germany', 'Italy', 'Netherlands')
-
-# Function: get last file from a folder
-last_file <- function(folder, filetype){
-  last_file <- file.info(list.files(folder, full.names = T))
-  file_name <- rownames(last_file)[which.max(last_file$mtime) & grepl(filetype, rownames(last_file))]
-  return(file_name)
-}
 
 cmi_file <- paste0('cmi/cmi_', format(Sys.Date(), '%Y%m%d'), '.csv')
 if(!file.exists(cmi_file)){
@@ -38,15 +24,3 @@ cmi <- readr::read_csv(last_file('cmi/', '.csv'), skip = 3) %>%
   dplyr::left_join(cities, by = 'City')
 
 cmi_sub <- dplyr::filter(cmi,  Country %in% countries & !is.na(CMI))
-
-ggplot(cmi_sub, aes(x = Date, y = CMI, colour = City))+
-  geom_line()+
-  facet_wrap(~Country)+
-  theme_minimal()+
-  theme(legend.position = 'none')+
-  labs(title = 'Citymapper Mobility Index for selected countries',
-       subtitle = 'Selected cities within each country. For the UK: London, Birmingham, Manchester',
-       x = '',
-       y = 'CMI',
-       caption = 'Source: Citymapper.com/CMI')
-
