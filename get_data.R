@@ -20,6 +20,7 @@ last_file <- function(folder, filetype){
 
 source('cmi.R')
 source('google_mob.R')
+source('regional.R')
 
 ##### VISUALISATIONS ####
 # Citymapper Mobility Index: international
@@ -31,8 +32,9 @@ ggplot(cmi_sub, aes(x = Date, y = CMI, colour = City))+
   labs(title = 'Citymapper Mobility Index for selected countries',
        subtitle = 'Selected cities within each country. For the UK: London, Birmingham, Manchester',
        x = '',
-       y = 'CMI',
-       caption = 'Source: Citymapper.com/CMI')
+       y = 'CityMapper Index (number of trips planned)',
+       caption = 'Source: Citymapper.com/CMI')+
+  ggsave('City Mapper Index - intl.png')
 
 # Google Mobility Index
 dplyr::filter(google_sub, is.na(sub_region_1)) %>%
@@ -47,4 +49,21 @@ dplyr::filter(google_sub, is.na(sub_region_1)) %>%
        colour = 'Area type',
        fill = 'Area type')+
   theme_minimal()+
-  theme(legend.position = 'bottom')
+  theme(legend.position = 'bottom')+
+  ggsave('Google Mobility Index - intl.png')
+
+# Local Authority outliers
+google_uk %>%
+  dplyr::filter(outlier & !is.na(CTRY19NM) & entity != 'residential') %>%
+  ggplot(aes(x = date, y = value_roll))+
+  geom_line(data = agg_uk, group = '', colour = 'black', size = 1.5, alpha = 0.3)+
+  geom_ribbon(data = agg_uk, aes(ymin = value_roll - sd_roll, ymax = value_roll + sd_roll))+
+  geom_line(aes(group = sub_region_1, colour = sub_region_1))+
+  facet_wrap(entity~., nrow = 1)+
+  labs(title = 'Google Mobility Index: outlier Local Authorities',
+       subtitle = '7-day rolling average; whole-country average in grey',
+       x = '',
+       y = '% Change in Mobility',
+       colour = 'Local Authority')+
+  theme_minimal()+
+  ggsave('Local Authority outliers - GMI.png')

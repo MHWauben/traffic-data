@@ -1,13 +1,5 @@
 ### UK regions?
 # Pulling data together
-library(readr)
-library(magrittr)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(purrr)
-library(zoo)
-library(ggplot2)
 # Lookup: Open Geography Portal 
 # https://geoportal.statistics.gov.uk/datasets/ward-to-local-authority-district-to-county-to-region-to-country-december-2019-lookup-in-united-kingdom
 uk_lookup <- readr::read_csv('https://opendata.arcgis.com/datasets/cdcc46d656e84e3d997e4ab2cd77881a_0.csv')
@@ -20,7 +12,9 @@ google_uk <- google_sub %>%
   dplyr::ungroup() %>%
   dplyr::group_by(sub_region_1) %>%
   dplyr::mutate(avg_perc = mean(perc, na.rm = T),
-                outlier = avg_perc > 60)
+                outlier = ifelse(entity == 'residential',
+                                 FALSE,
+                                 avg_perc > 60))
 
 plots <- list()
 for(country in c('England', 'Wales', 'Scotland', 'Northern Ireland')){
@@ -33,11 +27,15 @@ for(country in c('England', 'Wales', 'Scotland', 'Northern Ireland')){
          subtitle = '7-day rolling average',
          x = '',
          y = '% Change in Mobility')+
-    theme_minimal()
+    theme_minimal()+
+    ggsave(paste0('Local Authorities GMI - ', country, '.png'))
 }
 
-google_uk %>%
-  dplyr::filter(outlier & !is.na(CTRY19NM)) %>%
-  ggplot(aes(x = date, y = value_roll, group = sub_region_1))+
-  geom_line()+
-  facet_wrap(entity~CTRY19NM)
+agg_uk <- google_uk %>%
+  dplyr::group_by(date, entity) %>%
+  dplyr::summarise(value_roll = mean(value_roll, na.rm = T),
+                   sd_roll = sd(value_roll, na.rm = T)) %>%
+  dplyr::filter(entity != 'residential')
+
+
+
